@@ -1,0 +1,4 @@
+[root]
+name = "chip8_emulator"
+version = "0.0.1"
+
