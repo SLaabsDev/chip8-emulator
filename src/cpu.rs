@@ -35,12 +35,20 @@ impl Cpu {
     }
 
     pub fn cycle(&mut self) {
-        self.opcode = ((self.memory[self.program_counter] as u16) << 8) | (self.memory[self.program_counter + 1] as u16);
         
-
+        self.fetch_opcode();
 
         // execute
         // update timers
+    }
+
+    fn fetch_opcode(&mut self) {
+        self.opcode = ((self.memory[self.program_counter as usize] as u16) << 8) | 
+            (self.memory[(self.program_counter + 1) as usize]) as u16
+    }
+
+    fn nop(&mut self) {
+        // mainly for testing purposes
     }
 
     fn clear_screen(&mut self) {
@@ -51,9 +59,9 @@ impl Cpu {
         self.program_counter += 2;
     }
 
-    fn return(&mut self) {
-        self.stack_pointer--;
-        self.program_counter = self.stack[self.stack_pointer];
+    fn cpu_return(&mut self) {
+        self.stack_pointer -= 1;
+        self.program_counter = self.stack[self.stack_pointer as usize];
 
         self.program_counter += 2;
     }
@@ -63,8 +71,8 @@ impl Cpu {
     }
 
     fn call(&mut self) {
-        self.stack[self.stack_pointer] = self.program_counter;
-        self.stack_pointer++;
+        self.stack[self.stack_pointer as usize] = self.program_counter;
+        self.stack_pointer += 1;
 
         self.program_counter = self.opcode & 0x0FFF;
     }
@@ -74,7 +82,7 @@ impl Cpu {
         let x = self.opcode & 0x0F00;
         let val = self.opcode & 0x00FF;
 
-        if self.register[x] == val {
+        if self.register[x as usize] == val as u8 {
             self.program_counter += 2;
         }
 
@@ -86,7 +94,7 @@ impl Cpu {
         let x = self.opcode & 0x0F00;
         let val = self.opcode & 0x00FF;
 
-        if self.register[x] != val {
+        if self.register[x as usize] != val as u8 {
             self.program_counter += 2;
         }
 
@@ -98,7 +106,7 @@ impl Cpu {
         let x = self.opcode & 0x0F00;
         let y = self.opcode & 0x00F0;
 
-        if self.register[x] == self.register[y] {
+        if self.register[x as usize] == self.register[y as usize] {
             self.program_counter += 2;
         }
 
@@ -110,7 +118,7 @@ impl Cpu {
         let x = self.opcode & 0x0F00;
         let val = self.opcode & 0x00FF;
 
-        self.register[x] = val;
+        self.register[x as usize] = val as u8;
 
         self.program_counter += 2;
     }
@@ -120,7 +128,7 @@ impl Cpu {
         let x = self.opcode & 0x0F00;
         let val = self.opcode & 0x00FF;
 
-        self.register[x] += val;
+        self.register[x as usize] += val as u8;
 
         self.program_counter += 2;
     }
@@ -130,7 +138,7 @@ impl Cpu {
         let x = self.opcode & 0x0F00;
         let y = self.opcode & 0x00F0;
 
-        self.register[x] = self.register[y];
+        self.register[x as usize] = self.register[y as usize];
 
         self.program_counter += 2;
     }
@@ -159,6 +167,7 @@ static FONTSET: [u8; 80] = [
     0xF0, 0x80, 0xF0, 0x80, 0x80, // F
 ];
 
-static OPTABLE: [fn(); 16] = [
-
-];
+//static OPTABLE: [fn(); 16] = [
+//    nullop, nullop, nullop, nullop, nullop, nullop, nullop, nullop, nullop, nullop, nullop, nullop, nullop, nullop,
+//    nullop, nullop,
+//];
