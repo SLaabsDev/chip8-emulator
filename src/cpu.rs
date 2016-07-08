@@ -36,10 +36,106 @@ impl Cpu {
 
     pub fn cycle(&mut self) {
         self.opcode = ((self.memory[self.program_counter] as u16) << 8) | (self.memory[self.program_counter + 1] as u16);
-        // decode
+        
+
+
         // execute
         // update timers
     }
+
+    fn clear_screen(&mut self) {
+        for i in 0..(64 * 32) {
+            self.graphics[i] = 0;
+        }
+
+        self.program_counter += 2;
+    }
+
+    fn return(&mut self) {
+        self.stack_pointer--;
+        self.program_counter = self.stack[self.stack_pointer];
+
+        self.program_counter += 2;
+    }
+
+    fn jump(&mut self) {
+        self.program_counter = self.opcode & 0x0FFF;
+    }
+
+    fn call(&mut self) {
+        self.stack[self.stack_pointer] = self.program_counter;
+        self.stack_pointer++;
+
+        self.program_counter = self.opcode & 0x0FFF;
+    }
+
+    // 3XNN: Skip next instruction if VX == NN
+    fn skip_equal(&mut self) {
+        let x = self.opcode & 0x0F00;
+        let val = self.opcode & 0x00FF;
+
+        if self.register[x] == val {
+            self.program_counter += 2;
+        }
+
+        self.program_counter += 2;
+    }
+    
+    // 4XNN: Skip next instruction if VX != NN
+    fn skip_not_equal(&mut self) {
+        let x = self.opcode & 0x0F00;
+        let val = self.opcode & 0x00FF;
+
+        if self.register[x] != val {
+            self.program_counter += 2;
+        }
+
+        self.program_counter += 2;
+    }
+
+    // 5XY0: Skip next instruction if VX == VY
+    fn skip_regs_equal(&mut self) {
+        let x = self.opcode & 0x0F00;
+        let y = self.opcode & 0x00F0;
+
+        if self.register[x] == self.register[y] {
+            self.program_counter += 2;
+        }
+
+        self.program_counter += 2;
+    }
+
+    // 6XNN: Set VX = NN
+    fn set_vx_num(&mut self) {
+        let x = self.opcode & 0x0F00;
+        let val = self.opcode & 0x00FF;
+
+        self.register[x] = val;
+
+        self.program_counter += 2;
+    }
+
+    // 7XNN: Add NN to VX
+    fn add_vx_num(&mut self) {
+        let x = self.opcode & 0x0F00;
+        let val = self.opcode & 0x00FF;
+
+        self.register[x] += val;
+
+        self.program_counter += 2;
+    }
+
+    // 8XY0: Set VX to VY
+    fn set_vx_vy(&mut self) {
+        let x = self.opcode & 0x0F00;
+        let y = self.opcode & 0x00F0;
+
+        self.register[x] = self.register[y];
+
+        self.program_counter += 2;
+    }
+
+    
 }
 
 // Each character in the font set is 5 characters hide and 4 pixels wide
@@ -61,4 +157,8 @@ static FONTSET: [u8; 80] = [
     0xE0, 0x90, 0x90, 0x90, 0xE0, // D
     0xF0, 0x80, 0xF0, 0x80, 0xF0, // E
     0xF0, 0x80, 0xF0, 0x80, 0x80, // F
+];
+
+static OPTABLE: [fn(); 16] = [
+
 ];

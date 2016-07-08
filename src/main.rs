@@ -10,8 +10,8 @@ fn main() {
     // load game
     
     loop {
-        // emulate cycle
-        
+        chip8.cycle();
+
         // update graphics
         
         // set the keys
