@@ -66,10 +66,12 @@ impl Cpu {
         self.program_counter += 2;
     }
 
+    // 0x1NNN
     fn jump(&mut self) {
         self.program_counter = self.opcode & 0x0FFF;
     }
 
+    // 0x2NNN
     fn call(&mut self) {
         self.stack[self.stack_pointer as usize] = self.program_counter;
         self.stack_pointer += 1;
@@ -162,6 +164,130 @@ impl Cpu {
     fn set_vx_xor(&mut self, x: usize, y: usize) {
         self.register[x] = self.register[x] & self.register[y];
     }
+
+    // 8XY4: VX += VY with carry flag
+    fn add_vx_vy(&mut self, x: usize, y: usize) {
+        self.register[x] += self.register[y];
+
+        if(self.register[x] < self.register[y]) {
+            self.register[0xF] = 1;
+        } 
+        else {
+            self.register[0xF] = 0;
+        }
+    }
+
+    // 8XY5: VX -= VY with borrow flag
+    fn sub_vx_vy(&mut self, x: usize, y: usize) { 
+        if(self.register[x] < self.register[y]) {
+            self.register[0xF] = 0;
+        }
+        else {
+            self.register[0xF] = 1;
+        }
+        
+        self.register[x] -= self.register[y];
+    }
+
+    // 8XY6: Set VF to LSB of VX then shift VX right
+    fn shr_vx(&mut self, x: usize, y: usize) {
+        self.register[0xF] = self.register[x] & 1;
+        self.register[x] = self.register[x] >> 1;
+    }
+
+    // 8XY7: Set VX = VY - VX and set borrow flag
+    fn sub_vy_vx(&mut self, x: usize, y: usize) {
+        if(self.register[y] < self.register[x]) {
+            self.register[0xF] = 0;
+        }
+        else {
+            self.register[0xF] = 1;
+        }
+
+        self.register[x] = self.register[y] - self.register[x];
+    }
+
+    // 8XYE: Set flag to MSB then shift VX left
+    fn shl_vx(&mut self, x: usize, y: usize) {
+        self.register[0xF] = self.register[x] & 0x80;
+        self.register[x] = self.register[x] << 1;
+    }
+
+    // 9XY0: Skip the instruction if VX != VY
+    fn skip_regs_not_equal(&mut self) {
+        let x = self.opcode & 0x0F00;
+        let y = self.opcode & 0x00F0;
+
+        if(self.register[x as usize] != self.register[y as usize]) {
+            self.program_counter += 2;
+        }
+
+        self.program_counter += 2;
+    }
+
+    // ANNN: Set address register
+    fn set_adr_reg(&mut self) {
+        self.address_register = self.opcode & 0x0FFF;
+
+        self.program_counter += 2;
+    }
+
+    // BNNN: Jump to address NNN+V0
+    fn jump_add(&mut self) {
+        self.program_counter = (self.opcode & 0x0FFF) + self.register[0] as u16;
+    }
+
+    // CXNN
+    
+    // DXYN
+
+    // 0xEX9E and EXA1 skip instruction of key in VX if it is pressed/not pressed depending on
+    // opcode
+    fn skip_key_press(&mut self) {
+        // TODO: Implement key press data first
+    }
+
+    // Opcode 0xF000 instructions
+    fn opcode_f(&mut self) {
+        let x = self.opcode & 0x0F00;
+
+        // Call function from lookup table
+        
+        self.program_counter += 2;
+    }
+
+    // FX07: VX = delay_timer
+    fn set_vx_delay(&mut self, x: usize) {
+        self.register[x] = self.delay_timer;
+    }
+
+    // FX0A: Store key press in VX
+    fn set_vx_key(&mut self, x: usize) {
+        // TODO: Key press
+    }
+
+    // FX15: Set delay_timer = VX
+    fn set_delay_vx(&mut self, x: usize) {
+        self.delay_timer = self.register[x];
+    }
+
+    // FX18: Set sound_timer = VX
+    fn set_sound_vx(&mut self, x: usize) {
+        self.sound_timer = self.register[x];
+    }
+
+    // FX1E: Add VX to address pointer
+    fn add_adr_reg(&mut self, x: usize) {
+        self.address_register += self.register[x] as u16;
+    }
+
+    // FX29
+    
+    // FX33
+    
+    // FX55
+    
+    // FX65
 }
 
 // Each character in the font set is 5 characters hide and 4 pixels wide
