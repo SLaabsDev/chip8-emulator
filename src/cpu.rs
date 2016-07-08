@@ -47,7 +47,7 @@ impl Cpu {
             (self.memory[(self.program_counter + 1) as usize]) as u16
     }
 
-    fn nop(&mut self) {
+    fn nop() {
         // mainly for testing purposes
     }
 
@@ -132,18 +132,36 @@ impl Cpu {
 
         self.program_counter += 2;
     }
-
-    // 8XY0: Set VX to VY
-    fn set_vx_vy(&mut self) {
+    
+    // Opcode 0x8000 instructions
+    fn opcode_8(&mut self) {
         let x = self.opcode & 0x0F00;
         let y = self.opcode & 0x00F0;
 
-        self.register[x as usize] = self.register[y as usize];
-
+        // use lookup table to call the appropriate instruction passing x and y as usize
+    
         self.program_counter += 2;
     }
 
-    
+    // 8XY0: Set VX to VY
+    fn set_vx_vy(&mut self, x: usize, y: usize) {
+        self.register[x] = self.register[y];
+    }
+
+    // 8XY1: Set VX = VX | VY
+    fn set_vx_or(&mut self, x: usize, y: usize) {
+        self.register[x] = self.register[x] | self.register[y];
+    }
+
+    // 8XY2: Set VX = VX & VY
+    fn set_vx_and(&mut self, x: usize, y: usize) {
+        self.register[x] = self.register[x] & self.register[y];
+    }
+
+    // 8XY3: Set VX = VX ^ VY
+    fn set_vx_xor(&mut self, x: usize, y: usize) {
+        self.register[x] = self.register[x] & self.register[y];
+    }
 }
 
 // Each character in the font set is 5 characters hide and 4 pixels wide
