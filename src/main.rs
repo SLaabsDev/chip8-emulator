@@ -7,13 +7,21 @@ fn main() {
     
     let mut chip8 = Cpu::new();
 
-    // load game
-    
+    match chip8.load("PONG".to_string()) {
+        Ok(n) => start(chip8),
+        Err(err) => println!("Error: {}", err),
+    }
+
+}
+
+fn start(mut chip8: Cpu) {
     loop {
         chip8.cycle();
 
-        // update graphics
-        
-        // set the keys
+        if chip8.get_draw_flag() {
+            // draw
+        }
+
+        chip8.set_keys();
     }
 }

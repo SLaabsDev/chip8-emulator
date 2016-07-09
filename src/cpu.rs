@@ -1,10 +1,15 @@
 use std::env;
+use std::io;
+use std::io::prelude::*;
+use std::fs::File;
 
 // The Cpu struct represents the state of the cpu for the chip-8 emulation including
 // memory, registers, and graphics
 pub struct Cpu {
-	opcode: u16,
-    
+    opcode: u16,
+   
+    draw_flag: bool,
+
     memory: [u8; 4096],
 
     register: [u8; 16],
@@ -24,7 +29,7 @@ pub struct Cpu {
 
 impl Cpu {
     pub fn new() -> Cpu {
-        let mut cpu = Cpu { opcode: 0, memory: [0; 4096], register: [0; 16], address_register: 0, 
+        let mut cpu = Cpu { opcode: 0, draw_flag: false, memory: [0; 4096], register: [0; 16], address_register: 0, 
                             program_counter: 0x200, graphics: [0; 64 * 32], delay_timer: 0, 
                             sound_timer: 0, stack: [0; 16], stack_pointer: 0, key: [0; 16] };
 
@@ -36,32 +41,69 @@ impl Cpu {
         cpu
     }
 
-    pub fn load(&mut self, rom: String) {
-        let rom_path = env::current_dir().unwrap();
+    pub fn load(&mut self, rom: String) -> Result<i32, String> {
+        let mut rom_path = env::current_dir().unwrap();
         rom_path.pop();
         rom_path.push("/rom");
         rom_path.push(rom);
 
-        let mut rom_file = try!(File::open(rom_path));
+        let mut rom_file = try!(File::open(rom_path).map_err(|e| e.to_string()));
 
         let mut address = self.program_counter;
-        for byte in rom_files.bytes() {
-            self.memory[address] = byte.unwrap();
+        for byte in rom_file.bytes() {
+            self.memory[address as usize] = byte.unwrap();
             address += 1;
         }
+        
+        Ok(1)
     }
 
-    pub fn cycle(&mut self) {
-        
+    pub fn set_keys(&mut self) {
+        unimplemented!();
+    }
+
+    pub fn get_draw_flag(& self) -> bool {
+        self.draw_flag
+    }
+
+    pub fn cycle(&mut self) { 
         self.fetch_opcode();
 
-        // execute
-        // update timers
+        self.execute();
+
+        self.step_timers();
     }
 
     fn fetch_opcode(&mut self) {
         self.opcode = ((self.memory[self.program_counter as usize] as u16) << 8) | 
             (self.memory[(self.program_counter + 1) as usize]) as u16
+    }
+
+    fn execute(&mut self) {
+        match self.opcode & 0xF000 {
+            //0x0000 =>
+            0x1000 => self.jump(),
+            0x2000 => self.call(),
+            0x3000 => self.skip_equal(),
+            0x4000 => self.skip_not_equal(),
+            0x5000 => self.skip_regs_equal(),
+            0x6000 => self.set_vx_num(),
+            0x7000 => self.add_vx_num(),
+            0x8000 => self.opcode_8(),
+            0x9000 => self.skip_regs_not_equal(),
+            0xA000 => self.set_adr_reg(),
+            0xB000 => self.jump_add(),
+            //0xC000 => 
+            //0xD000 =>
+            0xE000 => self.skip_key_press(),
+            0xF000 => self.opcode_f(),
+            _      => println!("ERR: Opcode not implemented"),
+        }
+    }
+
+    fn step_timers(&mut self) {
+        // TODO: Step the timers at 60Hz
+        unimplemented!();
     }
 
     fn nop() {
@@ -186,7 +228,7 @@ impl Cpu {
     fn add_vx_vy(&mut self, x: usize, y: usize) {
         self.register[x] += self.register[y];
 
-        if(self.register[x] < self.register[y]) {
+        if self.register[x] < self.register[y] {
             self.register[0xF] = 1;
         } 
         else {
@@ -196,7 +238,7 @@ impl Cpu {
 
     // 8XY5: VX -= VY with borrow flag
     fn sub_vx_vy(&mut self, x: usize, y: usize) { 
-        if(self.register[x] < self.register[y]) {
+        if self.register[x] < self.register[y] {
             self.register[0xF] = 0;
         }
         else {
@@ -214,7 +256,7 @@ impl Cpu {
 
     // 8XY7: Set VX = VY - VX and set borrow flag
     fn sub_vy_vx(&mut self, x: usize, y: usize) {
-        if(self.register[y] < self.register[x]) {
+        if self.register[y] < self.register[x] {
             self.register[0xF] = 0;
         }
         else {
@@ -235,7 +277,7 @@ impl Cpu {
         let x = self.opcode & 0x0F00;
         let y = self.opcode & 0x00F0;
 
-        if(self.register[x as usize] != self.register[y as usize]) {
+        if self.register[x as usize] != self.register[y as usize] {
             self.program_counter += 2;
         }
 
@@ -262,13 +304,14 @@ impl Cpu {
     // opcode
     fn skip_key_press(&mut self) {
         // TODO: Implement key press data first
+        unimplemented!();
     }
 
     // Opcode 0xF000 instructions
     fn opcode_f(&mut self) {
         let x = self.opcode & 0x0F00;
 
-        // Call function from lookup table
+        // TODO: Call function from lookup table
         
         self.program_counter += 2;
     }
@@ -281,6 +324,7 @@ impl Cpu {
     // FX0A: Store key press in VX
     fn set_vx_key(&mut self, x: usize) {
         // TODO: Key press
+        unimplemented!();
     }
 
     // FX15: Set delay_timer = VX
@@ -327,8 +371,3 @@ static FONTSET: [u8; 80] = [
     0xF0, 0x80, 0xF0, 0x80, 0xF0, // E
     0xF0, 0x80, 0xF0, 0x80, 0x80, // F
 ];
-
-//static OPTABLE: [fn(); 16] = [
-//    nullop, nullop, nullop, nullop, nullop, nullop, nullop, nullop, nullop, nullop, nullop, nullop, nullop, nullop,
-//    nullop, nullop,
-//];
