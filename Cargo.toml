@@ -3,3 +3,7 @@
 name = "chip8_emulator"
 version = "0.0.1"
 authors = [ "Steven Laabs" ]
+
+[dependencies]
+
+sdl2 = "0.21"

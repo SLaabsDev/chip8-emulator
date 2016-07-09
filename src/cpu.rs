@@ -3,6 +3,8 @@ use std::io;
 use std::io::prelude::*;
 use std::fs::File;
 
+use keys::Keys;
+
 // The Cpu struct represents the state of the cpu for the chip-8 emulation including
 // memory, registers, and graphics
 pub struct Cpu {
@@ -24,14 +26,14 @@ pub struct Cpu {
     stack: [u16; 16],
     stack_pointer: u16,
 
-    key: [u8; 16],
+    pub keypad: Keys,
 }
 
 impl Cpu {
     pub fn new() -> Cpu {
         let mut cpu = Cpu { opcode: 0, draw_flag: false, memory: [0; 4096], register: [0; 16], address_register: 0, 
                             program_counter: 0x200, graphics: [0; 64 * 32], delay_timer: 0, 
-                            sound_timer: 0, stack: [0; 16], stack_pointer: 0, key: [0; 16] };
+                            sound_timer: 0, stack: [0; 16], stack_pointer: 0, keypad: Keys::new() };
 
         // allocate the first portion of memory to the fontset
         for i in 0..80 {
@@ -56,10 +58,6 @@ impl Cpu {
         }
         
         Ok(1)
-    }
-
-    pub fn set_keys(&mut self) {
-        unimplemented!();
     }
 
     pub fn get_draw_flag(& self) -> bool {

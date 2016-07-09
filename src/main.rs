@@ -1,6 +1,9 @@
+extern crate sdl2;
+
 use cpu::Cpu;
 
 mod cpu;
+mod keys;
 
 fn main() {
     // initialize graphics and keyboard input
@@ -22,6 +25,5 @@ fn start(mut chip8: Cpu) {
             // draw
         }
 
-        chip8.set_keys();
     }
 }
