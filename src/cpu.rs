@@ -4,6 +4,7 @@ use std::io::prelude::*;
 use std::fs::File;
 
 use keys::Keys;
+use screen::Screen;
 
 // The Cpu struct represents the state of the cpu for the chip-8 emulation including
 // memory, registers, and graphics
@@ -18,7 +19,6 @@ pub struct Cpu {
     address_register: u16,
     program_counter: u16,
     
-    graphics: [u8; 64 * 32],
 
     delay_timer: u8,
     sound_timer: u8,
@@ -26,13 +26,14 @@ pub struct Cpu {
     stack: [u16; 16],
     stack_pointer: u16,
 
+    pub graphics: Screen,
     pub keypad: Keys,
 }
 
 impl Cpu {
     pub fn new() -> Cpu {
         let mut cpu = Cpu { opcode: 0, draw_flag: false, memory: [0; 4096], register: [0; 16], address_register: 0, 
-                            program_counter: 0x200, graphics: [0; 64 * 32], delay_timer: 0, 
+                            program_counter: 0x200, graphics: Screen::new(), delay_timer: 0, 
                             sound_timer: 0, stack: [0; 16], stack_pointer: 0, keypad: Keys::new() };
 
         // allocate the first portion of memory to the fontset
@@ -92,10 +93,10 @@ impl Cpu {
             0xA000 => self.set_adr_reg(),
             0xB000 => self.jump_add(),
             //0xC000 => 
-            //0xD000 =>
+            0xD000 => self.draw(),
             0xE000 => self.skip_key_press(),
             0xF000 => self.opcode_f(),
-            _      => println!("Opcode not unimplemented: {}", self.opcode),
+            _      => println!("Opcode not unimplemented: {:X}", self.opcode),
         }
     }
 
@@ -308,13 +309,33 @@ impl Cpu {
 
     // CXNN
     
-    // DXYN
+    // DXYN: Draw sprite at position X,Y with N rows
+    fn draw(&mut self) {
+        
+    }
 
     // 0xEX9E and EXA1 skip instruction of key in VX if it is pressed/not pressed depending on
     // opcode
     fn skip_key_press(&mut self) {
-        // TODO: Implement key press data first
-        unimplemented!();
+        let key = (self.opcode & 0x0F00) >> 8;
+
+        match self.opcode & 0x00FF {
+            0x9E => {
+                if self.keypad.is_down(key as usize) {
+                    self.program_counter += 2;
+                }
+            }, 
+            
+            0xA1 => {
+                if !self.keypad.is_down(key as usize) {
+                    self.program_counter += 2;
+                }
+            },
+
+            _ => {},
+        }
+
+        self.program_counter += 2;
     }
 
     // Opcode 0xF000 instructions

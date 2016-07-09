@@ -7,6 +7,7 @@ use cpu::Cpu;
 
 mod cpu;
 mod keys;
+mod screen;
 
 fn main() {
     // initialize graphics and keyboard input
