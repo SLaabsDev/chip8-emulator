@@ -45,8 +45,8 @@ impl Cpu {
 
     pub fn load(&mut self, rom: String) -> Result<i32, String> {
         let mut rom_path = env::current_dir().unwrap();
-        rom_path.pop();
-        rom_path.push("/rom");
+       
+        rom_path.push("rom");
         rom_path.push(rom);
 
         let mut rom_file = try!(File::open(rom_path).map_err(|e| e.to_string()));
@@ -95,13 +95,23 @@ impl Cpu {
             //0xD000 =>
             0xE000 => self.skip_key_press(),
             0xF000 => self.opcode_f(),
-            _      => println!("ERR: Opcode not implemented"),
+            _      => println!("Opcode not unimplemented: {}", self.opcode),
         }
     }
 
     fn step_timers(&mut self) {
         // TODO: Step the timers at 60Hz
-        unimplemented!();
+        if self.delay_timer > 0 {
+            self.delay_timer -= 1;
+        }
+
+        if self.sound_timer > 0 {
+            if self.sound_timer == 1 {
+                println!("SoundTimer: BEEP");
+            }
+
+            self.sound_timer -= 1;
+        }
     }
 
     fn nop() {
@@ -138,7 +148,7 @@ impl Cpu {
 
     // 3XNN: Skip next instruction if VX == NN
     fn skip_equal(&mut self) {
-        let x = self.opcode & 0x0F00;
+        let x = (self.opcode & 0x0F00) >> 8;
         let val = self.opcode & 0x00FF;
 
         if self.register[x as usize] == val as u8 {
@@ -150,7 +160,7 @@ impl Cpu {
     
     // 4XNN: Skip next instruction if VX != NN
     fn skip_not_equal(&mut self) {
-        let x = self.opcode & 0x0F00;
+        let x = (self.opcode & 0x0F00) >> 8;
         let val = self.opcode & 0x00FF;
 
         if self.register[x as usize] != val as u8 {
@@ -162,8 +172,8 @@ impl Cpu {
 
     // 5XY0: Skip next instruction if VX == VY
     fn skip_regs_equal(&mut self) {
-        let x = self.opcode & 0x0F00;
-        let y = self.opcode & 0x00F0;
+        let x = (self.opcode & 0x0F00) >> 8;
+        let y = (self.opcode & 0x00F0) >> 4;
 
         if self.register[x as usize] == self.register[y as usize] {
             self.program_counter += 2;
@@ -174,8 +184,10 @@ impl Cpu {
 
     // 6XNN: Set VX = NN
     fn set_vx_num(&mut self) {
-        let x = self.opcode & 0x0F00;
+        let x = (self.opcode & 0x0F00) >> 8;
         let val = self.opcode & 0x00FF;
+
+        println!("LOG: Opcode - {}, x - {}, val - {}", self.opcode, x, val);
 
         self.register[x as usize] = val as u8;
 
@@ -184,7 +196,7 @@ impl Cpu {
 
     // 7XNN: Add NN to VX
     fn add_vx_num(&mut self) {
-        let x = self.opcode & 0x0F00;
+        let x = (self.opcode & 0x0F00) >> 8;
         let val = self.opcode & 0x00FF;
 
         self.register[x as usize] += val as u8;
@@ -194,8 +206,8 @@ impl Cpu {
     
     // Opcode 0x8000 instructions
     fn opcode_8(&mut self) {
-        let x = self.opcode & 0x0F00;
-        let y = self.opcode & 0x00F0;
+        let x = (self.opcode & 0x0F00) >> 8;
+        let y = (self.opcode & 0x00F0) >> 4;
 
         // use lookup table to call the appropriate instruction passing x and y as usize
     
@@ -272,8 +284,8 @@ impl Cpu {
 
     // 9XY0: Skip the instruction if VX != VY
     fn skip_regs_not_equal(&mut self) {
-        let x = self.opcode & 0x0F00;
-        let y = self.opcode & 0x00F0;
+        let x = (self.opcode & 0x0F00) >> 8;
+        let y = (self.opcode & 0x00F0) >> 4;
 
         if self.register[x as usize] != self.register[y as usize] {
             self.program_counter += 2;
@@ -307,7 +319,7 @@ impl Cpu {
 
     // Opcode 0xF000 instructions
     fn opcode_f(&mut self) {
-        let x = self.opcode & 0x0F00;
+        let x = (self.opcode & 0x0F00) >> 8;
 
         // TODO: Call function from lookup table
         

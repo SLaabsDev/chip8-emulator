@@ -14,7 +14,7 @@ fn main() {
     let mut chip8 = Cpu::new();
 
     match chip8.load("PONG".to_string()) {
-        Ok(n) => start(chip8),
+        Ok(..) => start(chip8),
         Err(err) => println!("Error: {}", err),
     }
 
@@ -25,7 +25,7 @@ fn start(mut chip8: Cpu) {
 
     let mut events = sdl_context.event_pump().unwrap();
     
-    'running: loop {
+    'cpu_cycle: loop {
         chip8.cycle();
 
         if chip8.get_draw_flag() {
@@ -34,7 +34,7 @@ fn start(mut chip8: Cpu) {
 
         for event in events.poll_iter() {
             match event {
-                Event::Quit {..}    => break 'running,
+                Event::Quit {..}    => break 'cpu_cycle,
                 Event::KeyDown { keycode, ..} => chip8.keypad.set_keys(keycode, false),
                 Event::KeyUp { keycode, ..}   => chip8.keypad.set_keys(keycode, true),
                 _ => {},
