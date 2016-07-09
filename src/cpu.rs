@@ -1,3 +1,5 @@
+use std::env;
+
 // The Cpu struct represents the state of the cpu for the chip-8 emulation including
 // memory, registers, and graphics
 pub struct Cpu {
@@ -32,6 +34,21 @@ impl Cpu {
         }
 
         cpu
+    }
+
+    pub fn load(&mut self, rom: String) {
+        let rom_path = env::current_dir().unwrap();
+        rom_path.pop();
+        rom_path.push("/rom");
+        rom_path.push(rom);
+
+        let mut rom_file = try!(File::open(rom_path));
+
+        let mut address = self.program_counter;
+        for byte in rom_files.bytes() {
+            self.memory[address] = byte.unwrap();
+            address += 1;
+        }
     }
 
     pub fn cycle(&mut self) {
