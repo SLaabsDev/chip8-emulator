@@ -385,9 +385,9 @@ impl Cpu {
             0x18 => self.set_sound_vx(x as usize),
             0x1E => self.add_adr_reg(x as usize),
             0x29 => self.set_adr_char(x as usize),
-            //0x33 =>
-            //0x55 =>
-            //0x65 =>
+            0x33 => self.vx_to_bcd(x as usize),
+            0x55 => self.store_regs(x as usize),
+            0x65 => self.read_regs(x as usize),
             _ => println!("Opcode not unimplemented: {:X}", self.opcode),
         }
     }
@@ -435,16 +435,37 @@ impl Cpu {
 
     // FX29: Set address pointer to memory address of the character in VX
     fn set_adr_char(&mut self, x: usize) {
-        self.address_register = self.register[x] * 5;
+        self.address_register = (self.register[x] as u16) * 5;
 
         self.program_counter += 2;
     }
 
-    // FX33
+    // FX33: Save register X at address pointer in 3 bytes as a binary-coded decimal
+    fn vx_to_bcd(&mut self, x: usize) {
+        self.memory[self.address_register as usize] = self.register[x] / 100; // digit 1
+        self.memory[(self.address_register as usize) + 1] = (self.register[x] / 10) % 10; // digit 2
+        self.memory[(self.address_register as usize) + 2] = (self.register[x] % 100) % 10; // digit 3
 
-    // FX55
-    
-    // FX65
+        self.program_counter += 2;
+    }
+
+    // FX55: Store registers 0..X inclusive into memory starting at address pointer
+    fn store_regs(&mut self, x: usize) {
+        for reg in 0..(x+1) {
+            self.memory[self.address_register as usize + reg] = self.register[reg];
+        }
+
+        self.program_counter += 2;
+    }
+
+    // FX65: Read registers 0..X inclusive from memory starting at address pointer
+    fn read_regs(&mut self, x: usize) {
+        for reg in 0..(x+1) {
+            self.register[reg] = self.memory[self.address_register as usize + reg];
+        }
+
+        self.program_counter += 2;
+    }
 }
 
 // Each character in the font set is 5 characters hide and 4 pixels wide
