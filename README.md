@@ -8,15 +8,33 @@ Chip8 Emulator
 
 ## Build and Run
 You can get the project using the download available above or by cloning with git using the following command:
-```$ git clone https://github.com/StevenLaabs/chip8-emulator.git
+```bash
+$ git clone https://github.com/StevenLaabs/chip8-emulator.git
+```
 
 #### Dependencies
 * [Rust](https://www.rust-lang.org/en-US/downloads.html)
 * Cargo (comes with Rust)
 * [SDL2.0 development libraries](https://www.libsdl.org/) (cargo will install rust-sdl2 automatically)
 
+#### Build with Cargo
 From the project directory run the following:
 ```bash
 $ cargo build
 $ cargo run
+```
+
+## Structure
+This section explains the purpose of each file in the project.
+```
+chip8-emulator
+│   README.md  - General information about the project.
+│   Cargo.toml - Cargo generated manifest used for compiling with cargo
+│   Cargo.lock - Cargo file for project info and dependencies
+│
+└───src
+    │   main.rs   - Entry point for the program. Sets up SDL and runs the main loop for the chip8.
+    │   cpu.rs    - Emulates the chip8 cpu with registers and memory. Handles the opcodes.
+    │   keys.rs   - Handles key state and presses.
+    │   screen.rs - Holds the state of the pixels on the screen and handles drawing them.
 ```
