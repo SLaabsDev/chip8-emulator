@@ -14,7 +14,7 @@ use screen::Screen;
 pub struct Cpu {
     opcode: u16,
    
-    draw_flag: bool,
+    pub draw_flag: bool,
 
     memory: [u8; 4096],
 
@@ -35,7 +35,7 @@ pub struct Cpu {
 
 impl Cpu {
     pub fn new() -> Cpu {
-        let mut cpu = Cpu { opcode: 0, draw_flag: false, memory: [0; 4096], register: [0; 16], address_register: 0, 
+        let mut cpu = Cpu { opcode: 0, draw_flag: true, memory: [0; 4096], register: [0; 16], address_register: 0, 
                             program_counter: 0x200, graphics: Screen::new(), delay_timer: 0, 
                             sound_timer: 0, stack: [0; 16], stack_pointer: 0, keypad: Keys::new() };
 
@@ -62,10 +62,6 @@ impl Cpu {
         }
         
         Ok(1)
-    }
-
-    pub fn get_draw_flag(& self) -> bool {
-        self.draw_flag
     }
 
     pub fn cycle(&mut self) { 
@@ -130,7 +126,8 @@ impl Cpu {
     // 0x00E0
     fn clear_screen(&mut self) {
         self.graphics.clear();
-
+        self.draw_flag = true;
+        
         self.program_counter += 2;
     }
 
@@ -340,9 +337,7 @@ impl Cpu {
     fn draw(&mut self) {
         let x = (self.opcode & 0x0F00) >> 8;
         let y = (self.opcode & 0x00F0) >> 4;
-        let rows = self.opcode & 0x000F;
-
-        
+        let rows = self.opcode & 0x000F; 
 
         self.register[0xF] = self.graphics.draw(x as usize, y as usize, &self.memory[(self.address_register as usize)..(self.address_register as usize + rows as usize)]);
     
