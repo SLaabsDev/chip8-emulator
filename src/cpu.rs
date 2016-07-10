@@ -80,7 +80,7 @@ impl Cpu {
 
     fn execute(&mut self) {
         match self.opcode & 0xF000 {
-            //0x0000 =>
+            0x0000 => self.opcode_0(),
             0x1000 => self.jump(),
             0x2000 => self.call(),
             0x3000 => self.skip_equal(),
@@ -119,14 +119,23 @@ impl Cpu {
         // mainly for testing purposes
     }
 
-    fn clear_screen(&mut self) {
-        for i in 0..(64 * 32) {
-            self.graphics[i] = 0;
+    // 0x0000 instructions
+    fn opcode_0(&mut self) {
+        match self.opcode & 0x00FF {
+            0x00E0 => self.clear_screen(),
+            0x00EE => self.cpu_return(),
+            _ => {},
         }
+    }
+
+    // 0x00E0
+    fn clear_screen(&mut self) {
+        self.graphics.clear();
 
         self.program_counter += 2;
     }
 
+    // 0x00EE
     fn cpu_return(&mut self) {
         self.stack_pointer -= 1;
         self.program_counter = self.stack[self.stack_pointer as usize];
@@ -187,8 +196,6 @@ impl Cpu {
     fn set_vx_num(&mut self) {
         let x = (self.opcode & 0x0F00) >> 8;
         let val = self.opcode & 0x00FF;
-
-        println!("LOG: Opcode - {}, x - {}, val - {}", self.opcode, x, val);
 
         self.register[x as usize] = val as u8;
 
@@ -311,7 +318,16 @@ impl Cpu {
     
     // DXYN: Draw sprite at position X,Y with N rows
     fn draw(&mut self) {
+        let x = (self.opcode & 0x0F00) >> 8;
+        let y = (self.opcode & 0x00F0) >> 4;
+        let rows = self.opcode & 0x000F;
+
         
+
+        self.register[0xF] = self.graphics.draw(x as usize, y as usize, &self.memory[(self.address_register as usize)..(self.address_register as usize + rows as usize)]);
+    
+        self.draw_flag = true;
+        self.program_counter += 2;
     }
 
     // 0xEX9E and EXA1 skip instruction of key in VX if it is pressed/not pressed depending on
