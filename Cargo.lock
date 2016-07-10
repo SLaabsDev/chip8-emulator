@@ -2,6 +2,7 @@
 name = "chip8_emulator"
 version = "0.0.1"
 dependencies = [
+ "rand 0.3.14 (registry+https://github.com/rust-lang/crates.io-index)",
  "sdl2 0.21.0 (registry+https://github.com/rust-lang/crates.io-index)",
 ]
 

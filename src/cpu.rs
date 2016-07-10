@@ -1,7 +1,10 @@
+extern crate rand;
+
 use std::env;
-use std::io;
 use std::io::prelude::*;
 use std::fs::File;
+
+use self::rand::Rng;
 
 use keys::Keys;
 use screen::Screen;
@@ -50,7 +53,7 @@ impl Cpu {
         rom_path.push("rom");
         rom_path.push(rom);
 
-        let mut rom_file = try!(File::open(rom_path).map_err(|e| e.to_string()));
+        let rom_file = try!(File::open(rom_path).map_err(|e| e.to_string()));
 
         let mut address = self.program_counter;
         for byte in rom_file.bytes() {
@@ -92,7 +95,7 @@ impl Cpu {
             0x9000 => self.skip_regs_not_equal(),
             0xA000 => self.set_adr_reg(),
             0xB000 => self.jump_add(),
-            //0xC000 => 
+            0xC000 => self.rand_op(),
             0xD000 => self.draw(),
             0xE000 => self.skip_key_press(),
             0xF000 => self.opcode_f(),
@@ -115,16 +118,12 @@ impl Cpu {
         }
     }
 
-    fn nop() {
-        // mainly for testing purposes
-    }
-
     // 0x0000 instructions
     fn opcode_0(&mut self) {
         match self.opcode & 0x00FF {
             0x00E0 => self.clear_screen(),
             0x00EE => self.cpu_return(),
-            _ => {},
+            _ => println!("Opcode not unimplemented: {:X}", self.opcode),
         }
     }
 
@@ -217,8 +216,19 @@ impl Cpu {
         let x = (self.opcode & 0x0F00) >> 8;
         let y = (self.opcode & 0x00F0) >> 4;
 
-        // use lookup table to call the appropriate instruction passing x and y as usize
-    
+        match self.opcode & 0x000F {
+            0x0 => self.set_vx_vy(x as usize, y as usize),
+            0x1 => self.set_vx_or(x as usize, y as usize),
+            0x2 => self.set_vx_and(x as usize, y as usize),
+            0x3 => self.set_vx_xor(x as usize, y as usize),
+            0x4 => self.add_vx_vy(x as usize, y as usize),
+            0x5 => self.sub_vx_vy(x as usize, y as usize),
+            0x6 => self.shr_vx(x as usize),
+            0x7 => self.sub_vy_vx(x as usize, y as usize),
+            0xE => self.shl_vx(x as usize),
+            _   => println!("Opcode not unimplemented: {:X}", self.opcode),
+        }
+
         self.program_counter += 2;
     }
 
@@ -267,7 +277,7 @@ impl Cpu {
     }
 
     // 8XY6: Set VF to LSB of VX then shift VX right
-    fn shr_vx(&mut self, x: usize, y: usize) {
+    fn shr_vx(&mut self, x: usize) {
         self.register[0xF] = self.register[x] & 1;
         self.register[x] = self.register[x] >> 1;
     }
@@ -285,7 +295,7 @@ impl Cpu {
     }
 
     // 8XYE: Set flag to MSB then shift VX left
-    fn shl_vx(&mut self, x: usize, y: usize) {
+    fn shl_vx(&mut self, x: usize) {
         self.register[0xF] = self.register[x] & 0x80;
         self.register[x] = self.register[x] << 1;
     }
@@ -314,8 +324,18 @@ impl Cpu {
         self.program_counter = (self.opcode & 0x0FFF) + self.register[0] as u16;
     }
 
-    // CXNN
-    
+    // CXNN: VX = bitwise and operation on random num and given num
+    fn rand_op(&mut self) {
+        let x = (self.opcode & 0x0F00) >> 8;
+        let value = self.opcode & 0x00FF;
+        
+        let mut rng = rand::thread_rng();
+
+        self.register[x as usize] = (value as u8) & rng.gen::<u8>();
+
+        self.program_counter += 2;
+    }
+
     // DXYN: Draw sprite at position X,Y with N rows
     fn draw(&mut self) {
         let x = (self.opcode & 0x0F00) >> 8;
@@ -348,7 +368,7 @@ impl Cpu {
                 }
             },
 
-            _ => {},
+            _ => println!("Opcode not unimplemented: {:X}", self.opcode),
         }
 
         self.program_counter += 2;
@@ -358,41 +378,70 @@ impl Cpu {
     fn opcode_f(&mut self) {
         let x = (self.opcode & 0x0F00) >> 8;
 
-        // TODO: Call function from lookup table
-        
-        self.program_counter += 2;
+        match self.opcode & 0x00FF {
+            0x07 => self.set_vx_delay(x as usize),
+            0x0A => self.set_vx_key(x as usize),
+            0x15 => self.set_delay_vx(x as usize),
+            0x18 => self.set_sound_vx(x as usize),
+            0x1E => self.add_adr_reg(x as usize),
+            0x29 => self.set_adr_char(x as usize),
+            //0x33 =>
+            //0x55 =>
+            //0x65 =>
+            _ => println!("Opcode not unimplemented: {:X}", self.opcode),
+        }
     }
 
     // FX07: VX = delay_timer
     fn set_vx_delay(&mut self, x: usize) {
         self.register[x] = self.delay_timer;
+        self.program_counter += 2;
     }
 
     // FX0A: Store key press in VX
     fn set_vx_key(&mut self, x: usize) {
-        // TODO: Key press
-        unimplemented!();
+        let mut pressed = false;
+
+        for i in 0..16 {
+            if self.keypad.is_down(i) {
+                self.register[x] = i as u8;
+                pressed = true;
+            }
+        }
+
+        // stay on this instruction until a key is pressed down
+        if pressed {
+            self.program_counter += 2;
+        }
     }
 
     // FX15: Set delay_timer = VX
     fn set_delay_vx(&mut self, x: usize) {
         self.delay_timer = self.register[x];
+        self.program_counter += 2;
     }
 
     // FX18: Set sound_timer = VX
     fn set_sound_vx(&mut self, x: usize) {
         self.sound_timer = self.register[x];
+        self.program_counter += 2;
     }
 
     // FX1E: Add VX to address pointer
     fn add_adr_reg(&mut self, x: usize) {
         self.address_register += self.register[x] as u16;
+        self.program_counter += 2;
     }
 
-    // FX29
-    
+    // FX29: Set address pointer to memory address of the character in VX
+    fn set_adr_char(&mut self, x: usize) {
+        self.address_register = self.register[x] * 5;
+
+        self.program_counter += 2;
+    }
+
     // FX33
-    
+
     // FX55
     
     // FX65

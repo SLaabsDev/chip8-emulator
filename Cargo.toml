@@ -7,3 +7,4 @@ authors = [ "Steven Laabs" ]
 [dependencies]
 
 sdl2 = "0.21"
+rand = "0.3"
