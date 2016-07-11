@@ -44,6 +44,7 @@ fn start(mut chip8: Cpu) {
         chip8.cycle();
 
         if chip8.draw_flag {
+
             chip8.graphics.show();
 
             let _ = renderer.set_draw_color(sdl2::pixels::Color::RGB(255, 255, 255));

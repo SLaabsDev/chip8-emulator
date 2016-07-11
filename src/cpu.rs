@@ -203,7 +203,9 @@ impl Cpu {
         let x = (self.opcode & 0x0F00) >> 8;
         let val = self.opcode & 0x00FF;
 
-        self.register[x as usize] += val as u8;
+        let sum: u16 = self.register[x as usize] as u16 + val;
+
+        self.register[x as usize] = (sum & 0x00FF) as u8;
 
         self.program_counter += 2;
     }
@@ -251,26 +253,29 @@ impl Cpu {
 
     // 8XY4: VX += VY with carry flag
     fn add_vx_vy(&mut self, x: usize, y: usize) {
-        self.register[x] += self.register[y];
-
-        if self.register[x] < self.register[y] {
+        let sum: u16 = self.register[x] as u16 + self.register[y] as u16;
+        
+        if sum > 255 {
             self.register[0xF] = 1;
         } 
         else {
             self.register[0xF] = 0;
         }
+
+        // dropping higher bits with the carry
+        self.register[x] = (sum & 0x00FF) as u8;
     }
 
     // 8XY5: VX -= VY with borrow flag
     fn sub_vx_vy(&mut self, x: usize, y: usize) { 
         if self.register[x] < self.register[y] {
             self.register[0xF] = 0;
+            self.register[x] = 255 - (self.register[y] - self.register[x]) + 1;
         }
         else {
             self.register[0xF] = 1;
+            self.register[x] -= self.register[y];
         }
-        
-        self.register[x] -= self.register[y];
     }
 
     // 8XY6: Set VF to LSB of VX then shift VX right
