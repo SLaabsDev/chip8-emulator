@@ -2,6 +2,10 @@ Chip8 Emulator
 ======
 **chip8-emulator** is a Rust implementation of the chip8 created to learn about the creation of emulators.
 
+## Screenshots
+![Pong](https://raw.githubusercontent.com/StevenLaabs/chip8-emulator/master/images/pong.png)
+![UFO](https://raw.githubusercontent.com/StevenLaabs/chip8-emulator/master/images/ufo.png)
+
 ## Download
 * [Current](https://github.com/StevenLaabs/chip8-emulator/archive/master.zip)
 * No complete versions are available. This project is a work in progress.
