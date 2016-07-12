@@ -2,7 +2,7 @@
 //use sdl2::rect;
 
 pub struct Screen {
-    pixels: [u8; (ROW_WIDTH as usize) * (ROW_HEIGHT as usize)],
+    pub pixels: [u8; (ROW_WIDTH as usize) * (ROW_HEIGHT as usize)],
     //renderer: 
 }
 
@@ -35,18 +35,16 @@ impl Screen {
         flag
     }
 
-    pub fn show(&mut self) {
-        
-    }
-
     pub fn clear(&mut self) {
-        for pixel in 0..((ROW_WIDTH as usize) * (ROW_HEIGHT as usize)) {
-            self.pixels[pixel] = 0;
-        }
+        self.pixels = [0; (ROW_WIDTH as usize) * (ROW_HEIGHT as usize)];
+    }
+    
+    pub fn get_pixel(& self, x: usize, y: usize) -> u8 {
+    	self.pixels[(y * ROW_WIDTH as usize) + x]
     }
 }
 
-const ROW_WIDTH: u8 = 64;
-const ROW_HEIGHT: u8 = 32;
+pub const ROW_WIDTH: u32 = 64;
+pub const ROW_HEIGHT: u32 = 32;
+pub const SCALE: u32 = 20;
 
-static scale: usize = 20;

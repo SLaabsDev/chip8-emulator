@@ -344,7 +344,7 @@ impl Cpu {
         let y = (self.opcode & 0x00F0) >> 4;
         let rows = self.opcode & 0x000F; 
 
-        self.register[0xF] = self.graphics.draw(x as usize, y as usize, &self.memory[(self.address_register as usize)..(self.address_register as usize + rows as usize)]);
+        self.register[0xF] = self.graphics.draw(self.register[x as usize] as usize, self.register[y as usize] as usize, &self.memory[(self.address_register as usize)..(self.address_register as usize + rows as usize)]);
     
         self.draw_flag = true;
         self.program_counter += 2;

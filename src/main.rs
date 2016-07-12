@@ -4,6 +4,9 @@ use sdl2::event::Event;
 use sdl2::rect::{Rect};
 
 use cpu::Cpu;
+use screen::ROW_WIDTH;
+use screen::ROW_HEIGHT;
+use screen::SCALE;
 
 mod cpu;
 mod keys;
@@ -27,7 +30,7 @@ fn start(mut chip8: Cpu) {
     let video_subsystem = sdl_context.video().unwrap();
 
     // make window
-    let window = match video_subsystem.window("Chip8 Emulator", 64*20, 32*20).position_centered().opengl().build() {
+    let window = match video_subsystem.window("Chip8 Emulator", ROW_WIDTH*SCALE, ROW_HEIGHT*SCALE).position_centered().opengl().build() {
         Ok(window) => window,
         Err(err)   => panic!("Failed to create window: {}", err)
     };
@@ -44,13 +47,22 @@ fn start(mut chip8: Cpu) {
         chip8.cycle();
 
         if chip8.draw_flag {
+            
+            //chip8.graphics.show();
+            for row in 0..ROW_HEIGHT {
+                for column in 0..ROW_WIDTH {
+                    let pos_x = column * SCALE;
+                    let pos_y = row * SCALE;
 
-            chip8.graphics.show();
-
-            let _ = renderer.set_draw_color(sdl2::pixels::Color::RGB(255, 255, 255));
-
-            let test_rect = Rect::new(0, 0, 128, 128);
-            let _ = renderer.draw_rect(test_rect);
+                    let pixel_rect = Rect::new(pos_x as i32, pos_y as i32, SCALE, SCALE);
+                    
+                    let color = if chip8.graphics.get_pixel(column as usize, row as usize) != 0 { 255 } else { 0 };
+                    let _ = renderer.set_draw_color(sdl2::pixels::Color::RGB(color, color, color));
+                    
+                    let _ = renderer.fill_rect(pixel_rect);
+                }
+            }
+            
             let _ = renderer.present();
 
             chip8.draw_flag = false;
