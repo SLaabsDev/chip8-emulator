@@ -3,10 +3,11 @@ extern crate sdl2;
 use sdl2::event::Event;
 use sdl2::rect::{Rect};
 
+use std::io;
+use std::thread::sleep;
+use std::time::Duration;
 use cpu::Cpu;
-use screen::ROW_WIDTH;
-use screen::ROW_HEIGHT;
-use screen::SCALE;
+use screen::{ ROW_WIDTH, ROW_HEIGHT, SCALE };
 
 mod cpu;
 mod keys;
@@ -17,9 +18,16 @@ fn main() {
     
     let mut chip8 = Cpu::new();
 
-    match chip8.load("PONG".to_string()) {
-        Ok(..) => start(chip8),
-        Err(err) => println!("Error: {}", err),
+    let mut game = String::new();
+
+    match io::stdin().read_line(&mut game) {
+        Ok(..) => {
+            match chip8.load("PONG".to_string()) {
+                Ok(..) => start(chip8),
+                Err(err) => println!("Error: {}", err),
+            }
+        }
+        Err(error) => println!("Error with game: {}", error),
     }
 
 }
@@ -42,12 +50,13 @@ fn start(mut chip8: Cpu) {
     };
 
     let mut events = sdl_context.event_pump().unwrap();
-    
+
     'cpu_cycle: loop {
+
         chip8.cycle();
 
         if chip8.draw_flag {
-            
+
             //chip8.graphics.show();
             for row in 0..ROW_HEIGHT {
                 for column in 0..ROW_WIDTH {
@@ -63,7 +72,7 @@ fn start(mut chip8: Cpu) {
                 }
             }
             
-            let _ = renderer.present();
+            renderer.present();
 
             chip8.draw_flag = false;
         }
@@ -77,5 +86,6 @@ fn start(mut chip8: Cpu) {
             }
         }
 
+        sleep(Duration::from_millis(1));
     }
 }

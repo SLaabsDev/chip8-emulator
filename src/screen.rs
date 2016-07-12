@@ -1,6 +1,3 @@
-//use sdl2::renderer;
-//use sdl2::rect;
-
 pub struct Screen {
     pub pixels: [u8; (ROW_WIDTH as usize) * (ROW_HEIGHT as usize)],
     //renderer: 

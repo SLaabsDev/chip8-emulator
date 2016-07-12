@@ -53,6 +53,8 @@ impl Cpu {
         rom_path.push("rom");
         rom_path.push(rom);
 
+        println!("ROM: {}", rom_path.display());
+
         let rom_file = try!(File::open(rom_path).map_err(|e| e.to_string()));
 
         let mut address = self.program_counter;
@@ -347,7 +349,7 @@ impl Cpu {
 
         self.register[0xF] = self.graphics.draw(self.register[x as usize] as usize, self.register[y as usize] as usize, &self.memory[(self.address_register as usize)..(self.address_register as usize + rows as usize)]);
     
-        self.draw_flag = true;
+        self.draw_flag = if self.register[0xF] != 0 { false } else { true };
         self.program_counter += 2;
     }
 
