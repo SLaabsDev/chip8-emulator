@@ -1,6 +1,6 @@
 Chip8 Emulator
 ======
-**chip8-emulator** is a Rust implementation of the chip8 created to learn about the creation of emulators.
+**chip8-emulator** is a Rust implementation of the Chip-8 created to learn about emulator development.
 
 ## Screenshots
 ![Pong](https://raw.githubusercontent.com/StevenLaabs/chip8-emulator/master/images/pong.png)
