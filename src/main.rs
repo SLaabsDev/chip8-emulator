@@ -22,7 +22,7 @@ fn main() {
 
     match io::stdin().read_line(&mut game) {
         Ok(..) => {
-            match chip8.load("PONG".to_string()) {
+            match chip8.load(game.trim().to_string()) {
                 Ok(..) => start(chip8),
                 Err(err) => println!("Error: {}", err),
             }
