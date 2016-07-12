@@ -33,12 +33,16 @@ This section explains the purpose of each file in the project.
 ```
 chip8-emulator
 │   README.md  - General information about the project.
-│   Cargo.toml - Cargo generated manifest used for compiling with cargo
-│   Cargo.lock - Cargo file for project info and dependencies
+│   Cargo.toml - Cargo file for project info and dependencies
+│   Cargo.lock - Cargo generated file for details on packages and dependencies
 │
 └───src
-    │   main.rs   - Entry point for the program. Sets up SDL and runs the main loop for the chip8.
-    │   cpu.rs    - Emulates the chip8 cpu with registers and memory. Handles the opcodes.
-    │   keys.rs   - Handles key state and presses.
-    │   screen.rs - Holds the state of the pixels on the screen and handles drawing them.
+│   │   main.rs   - Entry point for the program. Sets up SDL and runs the main loop for the chip8.
+│   │   cpu.rs    - Emulates the chip8 cpu with registers and memory. Handles the opcodes.
+│   │   keys.rs   - Handles key state and presses.
+│   │   screen.rs - Holds the state of the pixels on the screen and handles drawing them.
+│
+└───rom - holds public domain rom files which can be played on a chip8
+│
+└───images - screenshots of the emulator
 ```
