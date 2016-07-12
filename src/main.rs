@@ -71,8 +71,8 @@ fn start(mut chip8: Cpu) {
         for event in events.poll_iter() {
             match event {
                 Event::Quit {..}    => break 'cpu_cycle,
-                Event::KeyDown { keycode, ..} => chip8.keypad.set_keys(keycode, false),
-                Event::KeyUp { keycode, ..}   => chip8.keypad.set_keys(keycode, true),
+                Event::KeyDown { keycode, ..} => chip8.keypad.set_keys(keycode, true),
+                Event::KeyUp { keycode, ..}   => chip8.keypad.set_keys(keycode, false),
                 _ => {},
             }
         }

@@ -10,10 +10,16 @@ impl Keys {
     }
 
     pub fn is_down(& self, id: usize) -> bool {
+        if self.key[id] {
+            println!("Key {} is down", id);
+        }
+        
         self.key[id]
     }
 
     pub fn set_keys(&mut self, option_code: Option<Keycode>, state: bool) {
+        println!("set_keys called for {}", state);
+        
         match option_code {
             None => return,
             Some(code) => {               
