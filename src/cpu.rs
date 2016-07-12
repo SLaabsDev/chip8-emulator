@@ -107,7 +107,8 @@ impl Cpu {
 
         if self.sound_timer > 0 {
             if self.sound_timer == 1 {
-                println!("SoundTimer: BEEP");
+                // TODO: Implement a beep sound
+                //println!("SoundTimer: BEEP");
             }
 
             self.sound_timer -= 1;
@@ -353,7 +354,8 @@ impl Cpu {
     // 0xEX9E and EXA1 skip instruction of key in VX if it is pressed/not pressed depending on
     // opcode
     fn skip_key_press(&mut self) {
-        let key = (self.opcode & 0x0F00) >> 8;
+        let x = (self.opcode & 0x0F00) >> 8;
+        let key = self.register[x as usize];
 
         match self.opcode & 0x00FF {
             0x9E => {
@@ -362,7 +364,7 @@ impl Cpu {
                 }
             }, 
             
-            0xA1 => {
+            0xA1 => {         	
                 if !self.keypad.is_down(key as usize) {
                     self.program_counter += 2;
                 }
